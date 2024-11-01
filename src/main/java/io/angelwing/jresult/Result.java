@@ -65,7 +65,7 @@ import java.util.function.*;
  * var res = splitPayments(total, installments);
  * var first = switch (res) {
  *    case Ok(List<Double> installments) -> installments.getFirst();
- *    case Err(Exception e) -> total;
+ *    case Err(_) -> total;
  * }
  * }</pre>
  *
@@ -175,7 +175,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default boolean isOkAnd(Predicate<? super O> p) {
         return switch (this) {
             case Ok(O value) -> p.test(value);
-            case Err(E _) -> false;
+            case Err(_) -> false;
         };
     }
 
@@ -217,7 +217,7 @@ public sealed interface Result<O, E> permits Ok, Err {
      */
     default boolean isErrAnd(Predicate<? super E> p) {
         return switch (this) {
-            case Ok(O _) -> false;
+            case Ok(_) -> false;
             case Err(E error) -> p.test(error);
         };
     }
@@ -239,7 +239,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default Optional<O> ok() {
         return switch (this) {
             case Ok(O value) -> Optional.ofNullable(value);
-            case Err(E _) -> Optional.empty();
+            case Err(_) -> Optional.empty();
         };
     }
 
@@ -260,7 +260,7 @@ public sealed interface Result<O, E> permits Ok, Err {
      */
     default Optional<E> err() {
         return switch (this) {
-            case Ok(O _) -> Optional.empty();
+            case Ok(_) -> Optional.empty();
             case Err(E error) -> Optional.of(error);
         };
     }
@@ -271,7 +271,7 @@ public sealed interface Result<O, E> permits Ok, Err {
      * Example:
      * <pre>{@code
      * var res = Result.ok(5);
-     * res.map(v -> "result: %d,.formatted(v)); // Ok("result: 5")
+     * res.map(v -> "result: %d".formatted(v)); // Ok("result: 5")
      *
      * Result<Integer, String> res = Result.err("error");
      * res.map(v -> v * 2); // Err("error")
@@ -332,7 +332,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default O mapOr(UnaryOperator<O> op, O fallback) {
         return switch (this) {
             case Ok(O value) -> op.apply(value);
-            case Err(E _) -> fallback;
+            case Err(_) -> fallback;
         };
     }
 
@@ -355,7 +355,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default O mapOrElse(UnaryOperator<O> op, Supplier<? extends O> fallbackOp) {
         return switch (this) {
             case Ok(O value) -> op.apply(value);
-            case Err(E _) -> fallbackOp.get();
+            case Err(_) -> fallbackOp.get();
         };
     }
 
@@ -385,7 +385,7 @@ public sealed interface Result<O, E> permits Ok, Err {
                 op.accept(value);
                 yield ok;
             }
-            case Err(E _) -> this;
+            case Err(_) -> this;
         };
     }
 
@@ -410,7 +410,7 @@ public sealed interface Result<O, E> permits Ok, Err {
      */
     default Result<O, E> inspectErr(Consumer<? super E> op) {
         return switch (this) {
-            case Ok(O _) -> this;
+            case Ok(_) -> this;
             case Err(E error) -> {
                 Result<O, E> err = err(error);
                 op.accept(error);
@@ -440,7 +440,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default O expect(String message) {
         return switch (this) {
             case Ok(O value) -> value;
-            case Err(E _) -> throw new IllegalStateException(message);
+            case Err(_) -> throw new IllegalStateException(message);
         };
     }
 
@@ -464,7 +464,7 @@ public sealed interface Result<O, E> permits Ok, Err {
      */
     default E expectErr(String message) {
         return switch (this) {
-            case Ok(O _) -> throw new IllegalStateException(message);
+            case Ok(_) -> throw new IllegalStateException(message);
             case Err(E error) -> error;
         };
     }
@@ -489,7 +489,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default O unwrap() {
         return switch (this) {
             case Ok(O value) -> value;
-            case Err(E _) -> throw new IllegalStateException("called `Result.unwrap()` on an `Err` value");
+            case Err(_) -> throw new IllegalStateException("called `Result.unwrap()` on an `Err` value");
         };
     }
 
@@ -512,7 +512,7 @@ public sealed interface Result<O, E> permits Ok, Err {
      */
     default E unwrapErr() {
         return switch (this) {
-            case Ok(O _) -> throw new IllegalStateException("called `Result.unwrapErr()` on an `Ok` value");
+            case Ok(_) -> throw new IllegalStateException("called `Result.unwrapErr()` on an `Ok` value");
             case Err(E error) -> error;
         };
     }
@@ -535,7 +535,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default O unwrapOr(O fallback) {
         return switch (this) {
             case Ok(O value) -> value;
-            case Err(E _) -> fallback;
+            case Err(_) -> fallback;
         };
     }
 
@@ -557,7 +557,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default O unwrapOrElse(Supplier<? extends O> fallbackOp) {
         return switch (this) {
             case Ok(O value) -> value;
-            case Err(E _) -> fallbackOp.get();
+            case Err(_) -> fallbackOp.get();
         };
     }
 
@@ -566,21 +566,17 @@ public sealed interface Result<O, E> permits Ok, Err {
      * <p>
      * Example:
      * <pre>{@code
-     * var res1 = Result.ok(5);
-     * Result<Integer, String> res2 = Result.err("error");
-     * assertThat(res1.and(res2)).hasError("error");
+     * var res = ok(5).and(err("error"));
+     * assertThat(res).hasError("error");
      *
-     * Result<Integer, String> res1 = Result.err("error");
-     * var res2 = Result.ok(5);
-     * assertThat(res1.and(res2)).hasError("error");
+     * var res = err("error").and(ok(5));
+     * assertThat(res).hasError("error");
      *
-     * Result<Integer, String> res1 = Result.err("error1");
-     * Result<Integer, String> res2 = Result.err("error2");
-     * assertThat(res1.and(res2)).hasError("error1");
+     * var res = err("error1").and(err("error2"));
+     * assertThat(res).hasError("error1");
      *
-     * var res1 = Result.ok(5);
-     * var res2 = Result.ok(10);
-     * assertThat(res1.and(res2)).hasValue(10);
+     * var res = ok(5).and(ok(10));
+     * assertThat(res).hasValue(10);
      * }</pre>
      *
      * @param res  Result to return if current result is Ok.
@@ -589,7 +585,7 @@ public sealed interface Result<O, E> permits Ok, Err {
      */
     default <NO> Result<NO, E> and(Result<NO, E> res) {
         return switch (this) {
-            case Ok(O _) -> res;
+            case Ok(_) -> res;
             case Err(E error) -> err(error);
         };
     }
@@ -613,7 +609,7 @@ public sealed interface Result<O, E> permits Ok, Err {
      */
     default <NO> Result<NO, E> andThen(Supplier<? extends Result<NO, E>> op) {
         return switch (this) {
-            case Ok(O _) -> op.get();
+            case Ok(_) -> op.get();
             case Err(E error) -> err(error);
         };
     }
@@ -624,21 +620,17 @@ public sealed interface Result<O, E> permits Ok, Err {
      * <p>
      * Example:
      * <pre>{@code
-     * var res1 = Result.ok(5);
-     * Result<Integer, String> res2 = Result.err("error");
-     * assertThat(res1.or(res2)).hasValue(5);
+     * var res = ok(5).or(err("error"));
+     * assertThat(res).hasValue(5);
      *
-     * Result<Integer, String> res1 = Result.err("error");
-     * var res2 = Result.ok(5);
-     * assertThat(res1.or(res2)).hasValue(5);
+     * var res = err("error").or(ok(5));
+     * assertThat(res).hasValue(5);
      *
-     * Result<Integer, String> res1 = Result.err("error1");
-     * Result<Integer, String> res2 = Result.err("error2");
-     * assertThat(res1.and(res2)).hasError("error2");
+     * var res = err("error1").or(err("error2"));
+     * assertThat(res).hasError("error2");
      *
-     * var res1 = Result.ok(5);
-     * var res2 = Result.ok(10);
-     * assertThat(res1.and(res2)).hasValue(5);
+     * var res = ok(5).or(ok(10));
+     * assertThat(res).hasValue(5);
      * }</pre>
      *
      * @param <NE> New error value type.
@@ -647,7 +639,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default <NE> Result<O, NE> or(Result<O, NE> res) {
         return switch (this) {
             case Ok(O value) -> ok(value);
-            case Err(E _) -> res;
+            case Err(_) -> res;
         };
     }
 
@@ -671,7 +663,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default <NE> Result<O, NE> orElse(Supplier<? extends Result<O, NE>> op) {
         return switch (this) {
             case Ok(O value) -> ok(value);
-            case Err(E _) -> op.get();
+            case Err(_) -> op.get();
         };
     }
 }
