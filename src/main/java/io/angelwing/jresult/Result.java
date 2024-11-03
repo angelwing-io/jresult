@@ -271,11 +271,12 @@ public sealed interface Result<O, E> permits Ok, Err {
      * Example:
      * <pre>{@code
      * var res = Result.ok(5);
-     * res.map(v -> "result: %d".formatted(v)); // Ok("result: 5")
+     * var actual = res.map(v -> "result: %d".formatted(v));
+     * assertThat(actual).hasValue("result: 5");
      *
      * Result<Integer, String> res = Result.err("error");
-     * res.map(v -> v * 2); // Err("error")
-     * assertThat(res).hasError("error");
+     * var actual = res.map(v -> v * 2);
+     * assertThat(actual).hasError("error");
      * }</pre>
      *
      * @param op   Mapping function.
@@ -295,11 +296,12 @@ public sealed interface Result<O, E> permits Ok, Err {
      * Example:
      * <pre>{@code
      * Result<Integer, String> res = Result.err("error");
-     * res.mapErr(String::length); // Err(5)
+     * var actual = res.mapErr(String::length);
+     * assertThat(actual).hasError(5);
      *
-     * var res = Result.ok(5);
-     * res.mapErr(String::length); // Ok(5)
-     * assertThat(res).hasValue(5);
+     * Result<Integer, String> result = Result.ok(5);
+     * var actual = result.mapErr(Kaboom::new);
+     * assertThat(actual).hasValue(5);
      * }</pre>
      *
      * @param op   Mapping function.
