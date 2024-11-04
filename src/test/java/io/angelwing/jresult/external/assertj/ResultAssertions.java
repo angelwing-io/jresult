@@ -37,14 +37,22 @@ public class ResultAssertions<O, E> extends AbstractAssert<ResultAssertions<O, E
     public void hasValue(O expected) {
         isNotNull();
         if (!actual.isOkAnd(v -> v.equals(expected))) {
-            failWithMessage("Expected result to have value <%s>, but was <%s>", expected, actual);
+            try {
+                failWithMessage("Expected result to have value <%s>, but was <%s>", expected, actual.unwrap());
+            } catch (IllegalStateException _) {
+                failWithMessage("Expected result to have value, but was <%s>".formatted(actual));
+            }
         }
     }
 
     public void hasError(E expected) {
         isNotNull();
         if (!actual.isErrAnd(e -> e.equals(expected))) {
-            failWithMessage("Expected result to have error <%s>, but was <%s>", expected, actual);
+            try {
+                failWithMessage("Expected result to have error <%s>, but was <%s>", expected, actual.unwrapErr());
+            } catch (IllegalStateException e) {
+                failWithMessage("Expected result to have error, but was <%s>".formatted(actual));
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ package io.angelwing.jresult;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 import static io.angelwing.jresult.external.assertj.ResultAssertions.assertThat;
@@ -192,6 +193,306 @@ class ResultTest {
         var actual = result.mapErr(String::length);
         assertThat(actual).hasError(5);
     }
+
+    @Test
+    void shouldReturnMappedValueOnMapOrWhenResultIsOk() {
+        var result = Result.ok(5);
+        var actual = result.mapOr(v -> v * 2, 0);
+        Assertions.assertThat(actual).isEqualTo(10);
+    }
+
+    @Test
+    void shouldReturnFallbackValueOnMapOrWhenResultIsErr() {
+        Result<Integer, String> result = Result.err("error");
+        var actual = result.mapOr(v -> v * 2, 0);
+        Assertions.assertThat(actual).isZero();
+    }
+
+    @Test
+    void shouldReturnMappedValueOnMapOrElseWhenResultIsOk() {
+        var result = Result.ok(10);
+        var actual = result.mapOrElse(v -> v * 2, () -> 5);
+        Assertions.assertThat(actual).isEqualTo(20);
+    }
+
+    @Test
+    void shouldReturnFallbackSuppliedValueOnMapOrElseWhenResultIsErr() {
+        Result<Integer, String> result = Result.err("error");
+        var actual = result.mapOrElse(v -> v * 10, () -> 3);
+        Assertions.assertThat(actual).isEqualTo(3);
+    }
+
+    @Test
+    void shouldInspectWhenResultIsOk() {
+        var result = Result.ok(new Mutable(5));
+        var list = new ArrayList<Integer>();
+
+        var actual = result.inspect(v -> {
+            v.a = 20;
+            list.add(v.a);
+        });
+
+        Assertions.assertThat(list).containsOnly(20);
+        assertThat(actual).hasValue(new Mutable(20));
+    }
+
+    @Test
+    void shouldNotInspectionWhenResultIsErr() {
+        Result<Mutable, Crash> result = Result.err(new Crash(1.0f));
+        var list = new ArrayList<Integer>();
+
+        var actual = result.inspect(v -> {
+            v.a = 20;
+            list.add(v.a);
+        });
+
+        Assertions.assertThat(list).isEmpty();
+        assertThat(actual).isErr();
+    }
+
+    @Test
+    void shouldNotInspectErrWhenResultIsOk() {
+        Result<Mutable, TestError> result = Result.ok(new Mutable(5));
+        var errors = new ArrayList<TestError>();
+
+        var actual = result.inspectErr(errors::add);
+
+        Assertions.assertThat(errors).isEmpty();
+        assertThat(actual).isOk();
+    }
+
+    @Test
+    void shouldInspectErrWhenResultIsErr() {
+        Result<Integer, Mutable> result = Result.err(new Mutable(2));
+        var errors = new ArrayList<Mutable>();
+
+        var actual = result.inspectErr(e -> {
+            e.a *= 2;
+            errors.add(e);
+        });
+
+        Assertions.assertThat(errors).containsOnly(new Mutable(4));
+        assertThat(actual).isErr();
+    }
+
+    @Test
+    void shouldReturnValueOnExpectWhenResultIsOk() {
+        var result = Result.ok(5);
+        Assertions.assertThat(result.expect("no value")).isEqualTo(5);
+    }
+
+    @Test
+    void shouldThrowIllegalArgumentExceptionOnExpectWhenResultIsErr() {
+        Assertions.assertThatIllegalStateException()
+                .isThrownBy(() -> {
+                    var result = Result.err("error");
+                    result.expect("no value found");
+                })
+                .withMessage("no value found");
+    }
+
+    @Test
+    void shouldThrowIllegalArgumentExceptionOnExpectErrWhenResultIsOk() {
+        Assertions.assertThatIllegalStateException()
+                .isThrownBy(() -> {
+                    var result = Result.ok(5);
+                    result.expectErr("it is ok");
+                })
+                .withMessage("it is ok");
+    }
+
+    @Test
+    void shouldReturnErrorValueOnExpectErrWhenResultIsErr() {
+        var result = Result.err(new Kaboom("omg"));
+        Assertions.assertThat(result.expectErr("not an error"))
+                .isEqualTo(new Kaboom("omg"));
+    }
+
+    @Test
+    void shouldReturnValueOnUnwrapWhenResultIsOk() {
+        var result = Result.ok(5);
+        Assertions.assertThat(result.unwrap()).isEqualTo(5);
+    }
+
+    @Test
+    void shouldThrowIllegalArgumentExceptionOnUnwrapWhenResultIsErr() {
+        Assertions.assertThatIllegalStateException()
+                .isThrownBy(() -> {
+                    var result = Result.err("error");
+                    result.unwrap();
+                })
+                .withMessage("called `Result.unwrap()` on an `Err` value");
+    }
+
+    @Test
+    void shouldThrowIllegalArgumentExceptionOnUnwrapErrWhenResultIsOk() {
+        Assertions.assertThatIllegalStateException()
+                .isThrownBy(() -> {
+                    var result = Result.ok(5);
+                    result.unwrapErr();
+                })
+                .withMessage("called `Result.unwrapErr()` on an `Ok` value");
+    }
+
+    @Test
+    void shouldReturnErrorValueOnUnwrapErrWhenResultIsErr() {
+        var result = Result.err(new Boom(4));
+        Assertions.assertThat(result.unwrapErr())
+                .isEqualTo(new Boom(4));
+    }
+
+    @Test
+    void shouldReturnOriginalValueOnUnwrapOrWhenResultIsOk() {
+        var result = Result.ok(5);
+        Assertions.assertThat(result.unwrapOr(0)).isEqualTo(5);
+    }
+
+    @Test
+    void shouldReturnFallbackValueOnUnwrapOrWhenResultIsErr() {
+        Result<Integer, String> result = Result.err("error");
+        Assertions.assertThat(result.unwrapOr(0)).isZero();
+    }
+
+    @Test
+    void shouldReturnOriginalValueOnUnwrapOrElseWhenResultIsOk() {
+        var result = Result.ok(5);
+        Assertions.assertThat(result.unwrapOrElse(() -> 0))
+                .isEqualTo(5);
+    }
+
+    @Test
+    void shouldReturnFallbackValueOnUnwrapOrElseWhenResultIsErr() {
+        Result<Integer, String> result = Result.err("error");
+        Assertions.assertThat(result.unwrapOrElse(() -> 0)).isZero();
+    }
+
+    @Test
+    void shouldReturnErrOnAndWhenFirstIsOkAndSecondIsErr() {
+        Result<Integer, String> ok = Result.ok(5);
+        Result<Mutable, String> err = Result.err("error");
+
+        assertThat(ok.and(err)).hasError("error");
+    }
+
+    @Test
+    void shouldReturnErrOnAndWhenFirstIsErrAndSecondIsEOk() {
+        Result<Mutable, TestError> err = Result.err(new Boom(7));
+        Result<Integer, TestError> ok = Result.ok(5);
+
+        assertThat(err.and(ok)).hasError(new Boom(7));
+    }
+
+    @Test
+    void shouldReturnFirstErrOnAndWhenBothAreErr() {
+        Result<Integer, String> err1 = Result.err("error1");
+        Result<Mutable, String> err2 = Result.err("error2");
+
+        assertThat(err1.and(err2)).hasError("error1");
+    }
+
+    @Test
+    void shouldReturnLastOkOnAndWhenBothAreOk() {
+        Result<Integer, TestError> ok1 = Result.ok(5);
+        Result<Mutable, TestError> ok2 = Result.ok(new Mutable(10));
+
+        assertThat(ok1.and(ok2)).hasValue(new Mutable(10));
+    }
+
+    @Test
+    void shouldReturnErrOnAndThenWhenFirstIsOkAndSecondIsErr() {
+        Result<Integer, String> ok = Result.ok(5);
+        Result<Mutable, String> err = Result.err("error");
+
+        assertThat(ok.andThen(() -> err)).hasError("error");
+    }
+
+    @Test
+    void shouldReturnErrOnAndThenWhenFirstIsErrAndSecondIsEOk() {
+        Result<Mutable, TestError> err = Result.err(new Boom(7));
+        Result<Integer, TestError> ok = Result.ok(5);
+
+        assertThat(err.andThen(() -> ok)).hasError(new Boom(7));
+    }
+
+    @Test
+    void shouldReturnFirstErrOnAndThenWhenBothAreErr() {
+        Result<Integer, String> err1 = Result.err("error1");
+        Result<Mutable, String> err2 = Result.err("error2");
+
+        assertThat(err1.andThen(() -> err2)).hasError("error1");
+    }
+
+    @Test
+    void shouldReturnLastOkOnAndThenWhenBothAreOk() {
+        Result<Integer, TestError> ok1 = Result.ok(5);
+        Result<Mutable, TestError> ok2 = Result.ok(new Mutable(10));
+
+        assertThat(ok1.andThen(() -> ok2)).hasValue(new Mutable(10));
+    }
+
+    @Test
+    void shouldReturnFirstOkOnOrWhenFirstIsOkAndSecondIsErr() {
+        Result<Integer, TestError> ok = Result.ok(5);
+        Result<Integer, String> err = Result.err("error");
+
+        assertThat(ok.or(err)).hasValue(5);
+    }
+
+    @Test
+    void shouldReturnLastOkOnOrWhenAtLeastOneIsOk() {
+        Result<Integer, Boom> err = Result.err(new Boom(7));
+        Result<Integer, Kaboom> ok = Result.ok(5);
+
+        assertThat(err.or(ok)).hasValue(5);
+    }
+
+    @Test
+    void shouldReturnLastErrorOnOrWhenAllAreErr() {
+        Result<Mutable, Crash> err1 = Result.err(new Crash(3.14f));
+        Result<Mutable, Boom> err2 = Result.err(new Boom(2));
+
+        assertThat(err1.or(err2)).hasError(new Boom(2));
+    }
+
+    @Test
+    void shouldReturnFirstOkOnOrWhenAllAreOk() {
+        Result<Integer, String> ok1 = Result.ok(5);
+        Result<Integer, TestError> ok2 = Result.ok(10);
+
+        assertThat(ok1.or(ok2)).hasValue(5);
+    }
+
+    @Test
+    void shouldReturnFirstOkOnOrElseWhenFirstIsOkAndSecondIsErr() {
+        Result<Integer, TestError> ok = Result.ok(5);
+        Result<Integer, String> err = Result.err("error");
+
+        assertThat(ok.orElse(() -> err)).hasValue(5);
+    }
+
+    @Test
+    void shouldReturnLastOkOnOrElseWhenAtLeastOneIsOk() {
+        Result<Integer, Boom> err = Result.err(new Boom(7));
+        Result<Integer, Kaboom> ok = Result.ok(5);
+
+        assertThat(err.orElse(() -> ok)).hasValue(5);
+    }
+
+    @Test
+    void shouldReturnLastErrorOnOrElseWhenAllAreErr() {
+        Result<Mutable, Crash> err1 = Result.err(new Crash(3.14f));
+        Result<Mutable, Boom> err2 = Result.err(new Boom(2));
+
+        assertThat(err1.orElse(() -> err2)).hasError(new Boom(2));
+    }
+
+    @Test
+    void shouldReturnFirstOkOnOrElseWhenAllAreOk() {
+        Result<Integer, String> ok1 = Result.ok(5);
+        Result<Integer, TestError> ok2 = Result.ok(10);
+
+        assertThat(ok1.orElse(() -> ok2)).hasValue(5);
+    }
 }
 
 sealed interface TestError permits Kaboom, Boom, Crash {
@@ -204,4 +505,26 @@ record Boom(int radius) implements TestError {
 }
 
 record Crash(float damage) implements TestError {
+}
+
+class Mutable {
+    int a;
+
+    Mutable(int a) {
+        this.a = a;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof Mutable m) {
+            return this.a == m.a;
+        }
+
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return "Mutable{a:%d}".formatted(a);
+    }
 }

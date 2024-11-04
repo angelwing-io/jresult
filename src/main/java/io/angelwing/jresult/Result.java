@@ -363,6 +363,7 @@ public sealed interface Result<O, E> permits Ok, Err {
 
     /**
      * Call the consumer with the success value.
+     * Note that this method does not prevent value mutation.
      * <p>
      * Example:
      * <pre>{@code
@@ -370,7 +371,7 @@ public sealed interface Result<O, E> permits Ok, Err {
      * res.inspect(System.out::println); // prints 5
      *
      * var res = Result.ok(5);
-     * res.inspect(v -> v * 2); // does nothing
+     * res.inspect(v -> v * 2);
      * assertThat(res).hasValue(5);
      *
      * Result<Integer, String> res = Result.err("error");
@@ -381,18 +382,16 @@ public sealed interface Result<O, E> permits Ok, Err {
      * @return The same result.
      */
     default Result<O, E> inspect(Consumer<? super O> op) {
-        return switch (this) {
-            case Ok(O value) -> {
-                Result<O, E> ok = ok(value);
-                op.accept(value);
-                yield ok;
-            }
-            case Err(_) -> this;
-        };
+        if (this instanceof Ok(O value)) {
+            op.accept(value);
+        }
+
+        return this;
     }
 
     /**
      * Call the consumer with the error value.
+     * Note that this method does not prevent value mutation.
      * <p>
      * Example:
      * <pre>{@code
@@ -400,7 +399,7 @@ public sealed interface Result<O, E> permits Ok, Err {
      * res.inspectErr(System.out::println); // prints "error"
      *
      * Result<Integer, String> res = Result.err("error");
-     * res.inspectErr(e -> e.toUpperCase()); // does nothing
+     * res.inspectErr(e -> e.toUpperCase());
      * assertThat(res).hasError("error");
      *
      * Result<Integer, String> res = Result.ok(5);
@@ -411,14 +410,10 @@ public sealed interface Result<O, E> permits Ok, Err {
      * @return The same result.
      */
     default Result<O, E> inspectErr(Consumer<? super E> op) {
-        return switch (this) {
-            case Ok(_) -> this;
-            case Err(E error) -> {
-                Result<O, E> err = err(error);
-                op.accept(error);
-                yield err;
-            }
-        };
+        if (this instanceof Err(E error)) {
+            op.accept(error);
+        }
+        return this;
     }
 
     /**
