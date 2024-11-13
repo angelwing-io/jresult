@@ -1,4 +1,4 @@
-package io.angelwing.jresult;
+package io.github.dcadea.jresult;
 
 /**
  * Ok represents the success branch of the {@link Result} type.

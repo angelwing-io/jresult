@@ -1,4 +1,4 @@
-package io.angelwing.jresult;
+package io.github.dcadea.jresult;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import static io.angelwing.jresult.external.assertj.ResultAssertions.assertThat;
+import static io.github.dcadea.jresult.external.assertj.ResultAssertions.assertThat;
 
 class ResultTest {
 

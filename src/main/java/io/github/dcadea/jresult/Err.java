@@ -1,4 +1,4 @@
-package io.angelwing.jresult;
+package io.github.dcadea.jresult;
 
 import static java.util.Objects.requireNonNull;
 

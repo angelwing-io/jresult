@@ -1,6 +1,6 @@
-package io.angelwing.jresult.external.assertj;
+package io.github.dcadea.jresult.external.assertj;
 
-import io.angelwing.jresult.Result;
+import io.github.dcadea.jresult.Result;
 import org.assertj.core.api.AbstractAssert;
 
 public class ResultAssertions<O, E> extends AbstractAssert<ResultAssertions<O, E>, Result<O, E>> {

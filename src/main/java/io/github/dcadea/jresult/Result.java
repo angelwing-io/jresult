@@ -1,4 +1,4 @@
-package io.angelwing.jresult;
+package io.github.dcadea.jresult;
 
 import java.util.Optional;
 import java.util.function.*;
