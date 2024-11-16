@@ -8,14 +8,21 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * It is encouraged to use the static factory method {@link Result#err(Object)} to create an instance of Err.
  *
- * @param <O> Type of success value.
- * @param <E> Type of error value.
+ * @param <O>   Type of success value.
+ * @param <E>   Type of error value.
+ * @param error Error value
  * @author dcadea
  * @see Result#err(Object)
- * @since 1.0.0
+ * @since 0.1.0
  */
 public record Err<O, E>(E error) implements Result<O, E> {
 
+    /**
+     * Creates an error variant of result.
+     *
+     * @param error Error value.
+     * @throws NullPointerException if the error is null.
+     */
     public Err {
         requireNonNull(error, "Error cannot be null");
     }

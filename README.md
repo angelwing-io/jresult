@@ -1,7 +1,7 @@
 # jResult
 Inspired by :crab: [Rust](https://github.com/rust-lang/rust)
 
-[![Build Status](https://github.com/dcadea/jresult/actions/workflows/maven.yml/badge.svg?branch=main)](https://github.com/dcadea/jresult/actions/workflows/maven.yml)
+[![Build Status](https://github.com/dcadea/jresult/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/dcadea/jresult/actions/workflows/build.yml)
 
 ## Result pattern
 This library implements a design pattern called `Result`. 

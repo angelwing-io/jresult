@@ -72,13 +72,17 @@ import java.util.function.*;
  * @param <O> Type of success value.
  * @param <E> Type of error value.
  * @author dcadea
- * @since 1.0.0
+ * @since 0.1.0
  */
 public sealed interface Result<O, E> permits Ok, Err {
 
     /**
      * Empty result.
      * <p>Useful for "void" operations to signal success.</p>
+     *
+     * @param <O> Type of success value.
+     * @param <E> Type of error value.
+     * @return Empty Ok result.
      */
     @SuppressWarnings("unchecked")
     static <O, E> Result<O, E> empty() {
@@ -175,7 +179,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default boolean isOkAnd(Predicate<? super O> p) {
         return switch (this) {
             case Ok(O value) -> p.test(value);
-            case Err(_) -> false;
+            case Err(E ignored) -> false;
         };
     }
 
@@ -217,7 +221,7 @@ public sealed interface Result<O, E> permits Ok, Err {
      */
     default boolean isErrAnd(Predicate<? super E> p) {
         return switch (this) {
-            case Ok(_) -> false;
+            case Ok(O ignored) -> false;
             case Err(E error) -> p.test(error);
         };
     }
@@ -239,7 +243,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default Optional<O> ok() {
         return switch (this) {
             case Ok(O value) -> Optional.ofNullable(value);
-            case Err(_) -> Optional.empty();
+            case Err(E ignored) -> Optional.empty();
         };
     }
 
@@ -260,7 +264,7 @@ public sealed interface Result<O, E> permits Ok, Err {
      */
     default Optional<E> err() {
         return switch (this) {
-            case Ok(_) -> Optional.empty();
+            case Ok(O ignored) -> Optional.empty();
             case Err(E error) -> Optional.of(error);
         };
     }
@@ -334,7 +338,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default O mapOr(UnaryOperator<O> op, O fallback) {
         return switch (this) {
             case Ok(O value) -> op.apply(value);
-            case Err(_) -> fallback;
+            case Err(E ignored) -> fallback;
         };
     }
 
@@ -357,7 +361,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default O mapOrElse(UnaryOperator<O> op, Supplier<? extends O> fallbackOp) {
         return switch (this) {
             case Ok(O value) -> op.apply(value);
-            case Err(_) -> fallbackOp.get();
+            case Err(E ignored) -> fallbackOp.get();
         };
     }
 
@@ -437,7 +441,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default O expect(String message) {
         return switch (this) {
             case Ok(O value) -> value;
-            case Err(_) -> throw new IllegalStateException(message);
+            case Err(E ignored) -> throw new IllegalStateException(message);
         };
     }
 
@@ -461,7 +465,7 @@ public sealed interface Result<O, E> permits Ok, Err {
      */
     default E expectErr(String message) {
         return switch (this) {
-            case Ok(_) -> throw new IllegalStateException(message);
+            case Ok(O ignored) -> throw new IllegalStateException(message);
             case Err(E error) -> error;
         };
     }
@@ -486,7 +490,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default O unwrap() {
         return switch (this) {
             case Ok(O value) -> value;
-            case Err(_) -> throw new IllegalStateException("called `Result.unwrap()` on an `Err` value");
+            case Err(E ignored) -> throw new IllegalStateException("called `Result.unwrap()` on an `Err` value");
         };
     }
 
@@ -509,7 +513,7 @@ public sealed interface Result<O, E> permits Ok, Err {
      */
     default E unwrapErr() {
         return switch (this) {
-            case Ok(_) -> throw new IllegalStateException("called `Result.unwrapErr()` on an `Ok` value");
+            case Ok(O ignored) -> throw new IllegalStateException("called `Result.unwrapErr()` on an `Ok` value");
             case Err(E error) -> error;
         };
     }
@@ -532,7 +536,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default O unwrapOr(O fallback) {
         return switch (this) {
             case Ok(O value) -> value;
-            case Err(_) -> fallback;
+            case Err(E ignored) -> fallback;
         };
     }
 
@@ -554,7 +558,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default O unwrapOrElse(Supplier<? extends O> fallbackOp) {
         return switch (this) {
             case Ok(O value) -> value;
-            case Err(_) -> fallbackOp.get();
+            case Err(E ignored) -> fallbackOp.get();
         };
     }
 
@@ -582,7 +586,7 @@ public sealed interface Result<O, E> permits Ok, Err {
      */
     default <NO> Result<NO, E> and(Result<NO, E> res) {
         return switch (this) {
-            case Ok(_) -> res;
+            case Ok(O ignored) -> res;
             case Err(E error) -> err(error);
         };
     }
@@ -606,7 +610,7 @@ public sealed interface Result<O, E> permits Ok, Err {
      */
     default <NO> Result<NO, E> andThen(Supplier<? extends Result<NO, E>> op) {
         return switch (this) {
-            case Ok(_) -> op.get();
+            case Ok(O ignored) -> op.get();
             case Err(E error) -> err(error);
         };
     }
@@ -630,13 +634,14 @@ public sealed interface Result<O, E> permits Ok, Err {
      * assertThat(res).hasValue(5);
      * }</pre>
      *
+     * @param res  Result to return if current result is Err.
      * @param <NE> New error value type.
      * @return res if the result is Err, otherwise return current success result.
      */
     default <NE> Result<O, NE> or(Result<O, NE> res) {
         return switch (this) {
             case Ok(O value) -> ok(value);
-            case Err(_) -> res;
+            case Err(E ignored) -> res;
         };
     }
 
@@ -660,7 +665,7 @@ public sealed interface Result<O, E> permits Ok, Err {
     default <NE> Result<O, NE> orElse(Supplier<? extends Result<O, NE>> op) {
         return switch (this) {
             case Ok(O value) -> ok(value);
-            case Err(_) -> op.get();
+            case Err(E ignored) -> op.get();
         };
     }
 }

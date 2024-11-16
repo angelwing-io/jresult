@@ -6,11 +6,12 @@ package io.github.dcadea.jresult;
  * <p>
  * It is encouraged to use the static factory method {@link Result#ok(Object)} to create an instance of Ok.
  *
- * @param <O> Type of success value.
- * @param <E> Type of error value.
+ * @param <O>   Type of success value.
+ * @param <E>   Type of error value.
+ * @param value Ok value
  * @author dcadea
  * @see Result#ok(Object)
- * @since 1.0.0
+ * @since 0.1.0
  */
 public record Ok<O, E>(O value) implements Result<O, E> {
     static Ok<?, ?> EMPTY = new Ok<>(null);

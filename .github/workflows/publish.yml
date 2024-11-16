@@ -1,0 +1,36 @@
+name: Publish to Maven Central
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure Git User
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.ACTIONS_SSH_PRIVATE_KEY }}
+      - name: Set up Maven Central Repository
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'liberica'
+          cache: maven
+          server-id: central
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.M2_CENTRAL_GPG_PRIVATE_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+      - name: Maven Prepare Release
+        run: mvn -B release:prepare
+      - name: Maven Perform Release
+        run: mvn release:perform
+        env:
+          MAVEN_USERNAME: ${{ secrets.M2_CENTRAL_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.M2_CENTRAL_TOKEN }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.M2_CENTRAL_GPG_PASSPHRASE }}
