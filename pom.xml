@@ -4,7 +4,7 @@
 
     <groupId>io.github.dcadea</groupId>
     <artifactId>jresult</artifactId>
-    <version>0.1.1-SNAPSHOT</version>
+    <version>0.1.1</version>
 
     <name>jResult</name>
     <description>
@@ -39,7 +39,7 @@
         <connection>scm:git:git://github.com:dcadea/jresult.git</connection>
         <developerConnection>scm:git:git@github.com:dcadea/jresult.git</developerConnection>
         <url>https://github.com/dcadea/jresult</url>
-        <tag>HEAD</tag>
+        <tag>0.1.1</tag>
     </scm>
     <issueManagement>
         <url>https://github.com/dcadea/jresult/issues</url>
