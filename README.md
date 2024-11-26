@@ -1,6 +1,7 @@
 # jResult
 Inspired by :crab: [Rust](https://github.com/rust-lang/rust)
 
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.dcadea/jresult.svg?label=Maven%20Central)](https://search.maven.org/artifact/io.github.dcadea/jresult)
 [![Build Status](https://github.com/dcadea/jresult/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/dcadea/jresult/actions/workflows/build.yml)
 
 ## Result pattern
