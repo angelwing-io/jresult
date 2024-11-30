@@ -135,6 +135,36 @@ var value = switch (result) {
     };
 ```
 
+### Mapping values
+
+Use `map` and `mapErr` to apply conversion function.
+```java
+var ok = Result.ok(5); 
+ok.map(v -> v * 2);                     // Ok(10)
+ok.map(v -> "result: %d".formatted(v)); // Ok("result: 5")
+ok.mapErr(e -> e + "!!!");              // Ok(5)
+
+var err = Result.err("error");
+err.map(v -> v * 2);                    // Err("error")
+err.mapErr(Kaboom::new);                // Err(Kamoom("error"))
+```
+Have a fallback? Use `mapOr`.
+```java
+var res = Result.ok(5); 
+res.mapOr(v -> v * 2, 0); // Ok(10)
+
+Result<Integer, String> res = Result.err("error"); 
+res.mapOr(v -> v * 2, 0); // Ok(0)
+```
+Fallback with lazy evaluation is achievable with `mapOrElse`.
+```java
+var res = Result.ok(5); 
+res.mapOrElse(v -> v * 2, () -> 0); // Ok(10)
+
+Result<Integer, String> res = Result.err("error"); 
+res.mapOrElse(v -> v * 2, () -> 0); // Ok(0)
+```
+
 ### Logical operations
 
 Having two or more results you can apply logical short-circuit `and` & `or` operations.
