@@ -59,6 +59,46 @@ void main() {
     }
 }
 ```
+Not only exceptions could be errors
+```java
+sealed interface ApiError permits NotFoundError, ValidationError, BadRequest {}
+record NotFoundError(String message) implements ApiError {}
+record ValidationError(String field, String message) implements ApiError {}
+record BadRequest(String message) implements ApiError {}
+
+// ProductService
+Result<CartItem, ApiError> addToCart(UUID id, int qty) {
+    if (qty < 0) 
+        return err(new ValidationError("qty", "quantity could not be negative"));
+    
+    Product product = repository.findById(id);
+    if (product == null)
+        return err(new NotFoundError("product with id: %s not found".formatted(id)));
+    
+    if (qty > product.stock()) 
+        return err(new BadRequest("not enough products in stock"));
+
+    repository.reserve(product, qty);
+    return ok(new CartItem(product, qty));
+}
+
+// Resource/Controller
+@POST
+@Produces(MediaType.APPLICATION_JSON)
+Response<CartItem> addToCart(@FormParam UUID productId, @FormParam int qty) {
+    var cartItem = productService.addToCart(productId, qty);
+    
+    return switch (cartItem) {
+        case Ok(CartItem ci) -> Response.ok(ci);
+        case Err(NotFoundError e) -> 
+                Response.status(Status.NOT_FOUND).entity(e.message()).build();
+        case Err(ValidationError e) ->
+                Response.status(Status.BAD_REQUEST).entity(e).build();
+        case Err(BadRequest e) ->
+                Response.status(Status.BAD_REQUEST).entity(e).build();
+    };
+}
+```
 
 ### Creating a Result
 
