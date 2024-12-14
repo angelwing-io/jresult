@@ -186,7 +186,7 @@ ok.mapErr(e -> e + "!!!");              // Ok(5)
 
 var err = Result.err("error");
 err.map(v -> v * 2);                    // Err("error")
-err.mapErr(Kaboom::new);                // Err(Kamoom("error"))
+err.mapErr(Kaboom::new);                // Err(Kaboom("error"))
 ```
 Have a fallback? Use `mapOr`.
 ```java
